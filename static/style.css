@@ -9,6 +9,15 @@ header h1 {
     font-weight: 300;
 }
 
+/* Username Display in Header */
+#username-display {
+    color: #ffffff; /* 白色文字 */
+    font-size: 1.1rem; /* 稍微大一點的字體 */
+    font-weight: 500; /* 中等粗細 */
+    margin-right: 15px; /* 與登出按鈕保持距離 */
+    white-space: nowrap; /* 防止文字換行 */
+}
+
 /* Card Styles */
 .card {
     border: none;
