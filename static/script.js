@@ -22,6 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const expenseCategoryListEl = document.getElementById('expense-category-list');
     const incomeCategoryListEl = document.getElementById('income-category-list');
 
+    // Auth elements
+    const authModal = new bootstrap.Modal(document.getElementById('auth-modal'));
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const logoutBtn = document.getElementById('logout-btn');
+    const loginRegisterBtn = document.getElementById('login-register-btn');
+    const usernameDisplay = document.getElementById('username-display');
+    const mainContent = document.querySelector('main.container');
+
     const expenseChartCanvas = document.getElementById('expense-chart').getContext('2d');
     let expenseChart;
 
@@ -29,36 +38,99 @@ document.addEventListener('DOMContentLoaded', () => {
     let allTransactions = [];
     let categories = { expense: [], income: [] };
     let editingTransactionId = null;
+    let authToken = null;
+    let currentUsername = null;
 
     // --- API Communication ---
     const api = {
+        request: async (url, options = {}) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                alert('請先登入。');
+                clearAuthToken();
+                renderAuthUI();
+                throw new Error('Unauthorized');
+            }
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'API request failed');
+            }
+            return response.json();
+        },
+        register: (username, password) => api.request('/register', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        }),
+        login: async (username, password) => {
+            const response = await fetch('/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ username, password })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Login failed');
+            }
+            const data = await response.json();
+            saveAuthToken(data.access_token);
+            currentUsername = username;
+            return data;
+        },
         getTransactions: (query = '') => {
             const url = query ? `/api/transactions?query=${encodeURIComponent(query)}` : '/api/transactions';
-            return fetch(url).then(res => res.json());
+            return api.request(url);
         },
-        getCategories: () => fetch('/api/categories').then(res => res.json()),
-        createTransaction: (data) => fetch('/api/transactions', {
+        getCategories: () => api.request('/api/categories'),
+        createTransaction: (data) => api.request('/api/transactions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        }).then(res => res.json()),
-        updateTransaction: (id, data) => fetch(`/api/transactions/${id}`, {
+        }),
+        updateTransaction: (id, data) => api.request(`/api/transactions/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        }).then(res => res.json()),
-        deleteTransaction: (id) => fetch(`/api/transactions/${id}`, { method: 'DELETE' }),
-        createCategory: (data) => fetch('/api/categories', {
+        }),
+        deleteTransaction: (id) => api.request(`/api/transactions/${id}`, { method: 'DELETE' }),
+        createCategory: (data) => api.request('/api/categories', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-        }).then(res => res.json()),
-        deleteCategory: (type, name) => fetch(`/api/categories/${type}/${name}`, { method: 'DELETE' }),
+        }),
+        deleteCategory: (type, name) => api.request(`/api/categories/${type}/${name}`, { method: 'DELETE' }),
     };
 
     // --- Utility Functions ---
     const formatCurrency = (num) => `$${Math.round(Number(num))}`;
     const formatDate = (dateStr) => new Date(dateStr + 'T00:00:00').toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+    const saveAuthToken = (token) => {
+        localStorage.setItem('authToken', token);
+        authToken = token;
+    };
+
+    const getAuthToken = () => {
+        return localStorage.getItem('authToken');
+    };
+
+    const clearAuthToken = () => {
+        localStorage.removeItem('authToken');
+        authToken = null;
+        currentUsername = null;
+    };
+
+    const parseJwt = (token) => {
+        try {
+            return JSON.parse(atob(token.split('.')[1]));
+        } catch (e) {
+            return null;
+        }
+    };
 
     // --- Rendering Functions ---
     const renderCategories = () => {
@@ -172,6 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const keyword = filterKeywordEl.value.toLowerCase();
         const now = new Date();
         now.setHours(0, 0, 0, 0); // 將時間歸零，以便進行日期比較
+
+        // Ensure allTransactions is an array before filtering
+        if (!Array.isArray(allTransactions)) {
+            console.warn('allTransactions is not an array, initializing to empty array.');
+            allTransactions = [];
+        }
 
         return allTransactions.filter(t => {
             const transactionDate = new Date(t.date + 'T00:00:00');
@@ -374,25 +452,116 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTransactionCategoryDropdown();
     });
     
+    // --- Event Handlers for Auth ---
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            await api.login(username, password);
+            authModal.hide();
+            await refreshData();
+            renderAuthUI();
+        } catch (error) {
+            alert(error.message);
+            console.error('Login failed:', error);
+        }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('register-username').value;
+        const password = document.getElementById('register-password').value;
+
+        try {
+            await api.register(username, password);
+            alert('註冊成功，請登入！');
+            authModal.hide();
+            // Optionally switch to login tab after successful registration
+            const loginTab = new bootstrap.Tab(document.getElementById('login-tab'));
+            loginTab.show();
+        } catch (error) {
+            alert(error.message);
+            console.error('Registration failed:', error);
+        }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        clearAuthToken();
+        renderAuthUI();
+        // Clear existing data and re-render UI for logged out state
+        allTransactions = [];
+        categories = { expense: [], income: [] };
+        renderUI();
+        transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">請登入以查看交易紀錄。</li>';
+    });
+
+    // --- UI State Management for Auth ---
+    const renderAuthUI = () => {
+        authToken = getAuthToken();
+        if (authToken) {
+            const payload = parseJwt(authToken);
+            currentUsername = payload ? payload.sub : '使用者';
+            usernameDisplay.textContent = `歡迎, ${currentUsername}`;
+            usernameDisplay.style.display = 'inline';
+            logoutBtn.style.display = 'inline';
+            loginRegisterBtn.style.display = 'none';
+            mainContent.style.display = 'block'; // Show main content
+        } else {
+            usernameDisplay.style.display = 'none';
+            logoutBtn.style.display = 'none';
+            loginRegisterBtn.style.display = 'inline';
+            mainContent.style.display = 'none'; // Hide main content
+            authModal.show(); // Show login/register modal
+        }
+    };
+
     // --- Initialization ---
+    /**
+     * @function refreshData
+     * @description 從 API 獲取最新的交易和分類數據，並更新 UI。
+     */
+    /**
+     * @function refreshData
+     * @description 從 API 獲取最新的交易和分類數據，並更新 UI。
+     */
     const refreshData = async () => {
+        // 如果沒有認證 token，則不發送 API 請求，直接清空數據並更新 UI
+        if (!authToken) {
+            allTransactions = [];
+            categories = { expense: [], income: [] };
+            renderUI();
+            transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">請登入以查看交易紀錄。</li>';
+            return;
+        }
+
         try {
             const [transactionsData, categoriesData] = await Promise.all([
                 api.getTransactions(filterKeywordEl.value), // 傳遞關鍵字給後端
                 api.getCategories()
             ]);
-            allTransactions = transactionsData;
+            // Ensure allTransactions is an array
+            allTransactions = Array.isArray(transactionsData) ? transactionsData : [];
             categories = categoriesData;
             renderUI();
         } catch (error) {
             console.error('Failed to load data:', error);
-            transactionsListEl.innerHTML = '<li class="list-group-item text-center text-danger p-3">無法載入資料，請確認後端伺服器是否已啟動。</li>';
+            // If unauthorized, renderAuthUI will be called by api.request
+            if (error.message !== 'Unauthorized') {
+                transactionsListEl.innerHTML = '<li class="list-group-item text-center text-danger p-3">無法載入資料，請確認後端伺服器是否已啟動或您是否有權限。</li>';
+            }
+            // If data loading fails, ensure allTransactions is an empty array to prevent further errors
+            allTransactions = [];
+            categories = { expense: [], income: [] };
+            renderUI(); // Re-render UI with empty data
         }
     };
 
     const init = () => {
         document.getElementById('transaction-date').valueAsDate = new Date();
-        refreshData();
+        renderAuthUI(); // Render auth UI first
+        refreshData(); // Then try to refresh data
     };
 
     init();
