@@ -1,93 +1,121 @@
-# StashUp - 日常記帳應用程式
+# StashUp - 個人財務管理應用程式
 
-StashUp 是一個簡單的日常記帳應用程式，旨在幫助使用者輕鬆追蹤收入和支出。它提供使用者註冊、登入、交易記錄、分類管理、交易匯入/匯出以及財務分析圖表等功能。
+StashUp 是一個基於 FastAPI 和 SQLite 的個人財務管理應用程式，旨在幫助使用者追蹤收入和支出，管理類別，並提供交易的匯入匯出功能。前端使用 HTML、CSS 和 JavaScript 實現。
+
+## 專案描述
+
+本專案旨在提供一個簡單易用的 Web 應用程式，讓使用者能夠：
+- 註冊和登入帳戶
+- 記錄收入和支出交易
+- 管理自訂交易類別
+- 匯入 CSV 格式的交易紀錄
+- 匯出交易紀錄為 CSV 檔案
+- 查看交易概覽
 
 ## 檔案結構
 
 ```
 .
-├── main.py             # FastAPI 後端應用程式
-├── requirements.txt    # Python 依賴套件
-├── run.bat             # 啟動應用程式的批次檔 (Windows)
-├── todolist.md         # 任務清單
-├── wrangler.toml       # Cloudflare Workers 相關配置 (如果使用)
-├── static/             # 靜態檔案目錄
-│   ├── index.html      # 前端主頁面
-│   ├── script.js       # 前端 JavaScript 邏輯
-│   └── style.css       # 前端樣式表
-└── stashup.db          # SQLite 資料庫檔案 (由應用程式自動生成)
+├── app/
+│   ├── __init__.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── auth.py           # 使用者認證相關路由 (註冊、登入)
+│   │   ├── categories.py     # 類別管理相關路由 (增、刪、改、查)
+│   │   └── transactions.py   # 交易管理相關路由 (增、刪、改、查、匯入、匯出)
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── dependencies.py   # FastAPI 依賴注入 (如取得當前使用者)
+│   │   └── security.py       # 密碼雜湊、JWT 生成與驗證
+│   ├── crud/
+│   │   ├── __init__.py
+│   │   └── crud.py           # 資料庫操作 (CRUD 邏輯)
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── database.py       # 資料庫引擎、會話、Base 聲明、get_db 依賴
+│   │   └── models.py         # SQLAlchemy 資料庫模型 (User, Transaction, Category)
+│   └── schemas/
+│       ├── __init__.py
+│       └── schemas.py        # Pydantic 資料模型 (請求/回應模型)
+├── static/
+│   ├── index.html            # 前端主頁面
+│   ├── script.js             # 前端 JavaScript 邏輯
+│   └── style.css             # 前端樣式
+├── main.py                   # FastAPI 應用程式入口點，整合各模組路由
+├── readme.md                 # 專案說明文件
+├── requirements.txt          # Python 依賴套件列表
+├── .gitignore                # Git 忽略文件
+├── .python-version           # pyenv 版本文件
+├── run.bat                   # Windows 啟動腳本
+├── todolist.md               # 任務清單
+└── wrangler.toml             # Cloudflare Wrangler 配置 (如果部署到 Cloudflare Workers)
 ```
 
 ## 使用技術
 
-*   **後端:** Python, FastAPI, SQLAlchemy, SQLite, Passlib (bcrypt), PyJWT
-*   **前端:** HTML5, CSS3 (Bootstrap 5), JavaScript, Chart.js
-*   **資料庫:** SQLite
+- **後端**:
+    - Python 3.9+
+    - FastAPI: 高性能 Web 框架
+    - SQLAlchemy: ORM (Object Relational Mapper)
+    - SQLite: 輕量級資料庫
+    - Passlib: 密碼雜湊
+    - PyJWT: JWT (JSON Web Token) 認證
+- **前端**:
+    - HTML5
+    - CSS3
+    - JavaScript (Vanilla JS)
+- **開發工具**:
+    - pip: Python 套件管理器
+    - uvicorn: ASGI 伺服器
 
-## 檔案清單與簡短說明
+## 檔案清單簡短說明
 
-*   [`main.py`](main.py):
-    *   FastAPI 應用程式的核心檔案。
-    *   定義了資料庫模型 (User, Transaction, Category)。
-    *   包含了使用者認證 (註冊、登入、JWT Token) 的 API 端點。
-    *   提供了交易記錄 (新增、讀取、更新、刪除、匯入、匯出) 的 API 端點。
-    *   提供了分類管理 (新增、讀取、更新、刪除) 的 API 端點。
-    *   處理靜態檔案的服務。
-    *   包含應用程式啟動時的預設分類種子數據邏輯。
-*   [`requirements.txt`](requirements.txt): 列出了所有 Python 依賴套件，用於 `pip install -r requirements.txt`。
-*   [`run.bat`](run.bat): Windows 批次檔，用於啟動 Uvicorn 伺服器。
-*   [`todolist.md`](todolist.md): 專案開發過程中的任務追蹤清單。
-*   [`wrangler.toml`](wrangler.toml): Cloudflare Workers 的設定檔，用於部署到 Cloudflare (如果使用)。
-*   [`static/index.html`](static/index.html): 應用程式的前端使用者介面，包含儀表板、交易列表、篩選器、模態視窗等。
-*   [`static/script.js`](static/script.js): 處理前端邏輯，包括 API 請求、DOM 操作、資料渲染、圖表繪製以及使用者認證流程。
-*   [`static/style.css`](static/style.css): 應用程式的自訂 CSS 樣式。
-*   `stashup.db`: SQLite 資料庫檔案，由 SQLAlchemy 自動生成和管理，用於儲存使用者、交易和分類資料。
+- `app/`: 包含所有後端應用程式邏輯的目錄。
+    - `app/api/`: 包含所有 API 路由定義。
+    - `app/core/`: 包含核心功能，如安全和依賴注入。
+    - `app/crud/`: 包含與資料庫互動的 CRUD 操作。
+    - `app/models/`: 包含 SQLAlchemy 資料庫模型和資料庫連接設定。
+    - `app/schemas/`: 包含 Pydantic 請求和回應資料模型。
+- `static/`: 包含前端靜態檔案。
+- `main.py`: 應用程式的啟動文件，負責初始化 FastAPI 應用程式並掛載路由。
+- `readme.md`: 本專案的說明文件。
+- `requirements.txt`: 列出所有 Python 依賴套件。
+- `run.bat`: 用於在 Windows 環境下啟動應用程式的批次檔。
+- `todolist.md`: 專案任務進度追蹤文件。
+- `wrangler.toml`: Cloudflare Workers 的配置檔案，用於部署。
 
 ## 安裝及執行方式
 
-### 前置條件
+### 1. 環境準備
 
-*   Python 3.9+
-*   pip (Python 套件管理器)
+確保您的系統已安裝 Python 3.9 或更高版本。建議使用 `pyenv` 或 `conda` 等工具管理 Python 環境。
 
-### 安裝步驟
+### 2. 安裝依賴
 
-1.  **複製專案:**
-    ```bash
-    git clone <專案的 Git 儲存庫 URL>
-    cd StashUp
-    ```
-2.  **建立並啟用虛擬環境 (推薦):**
-    ```bash
-    python -m venv .venv
-    # Windows
-    .\.venv\Scripts\activate
-    # macOS/Linux
-    # source ./.venv/bin/activate
-    ```
-3.  **安裝依賴套件:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-    如果遇到 `bcrypt` 相關錯誤，請確保已安裝 `bcrypt`：
-    ```bash
-    pip install bcrypt
-    ```
+```powershell
+pip install -r requirements.txt
+```
 
-### 執行應用程式
+### 3. 啟動應用程式
 
-1.  **啟動 FastAPI 伺服器:**
-    在專案根目錄下，執行以下命令：
-    ```bash
-    python -m uvicorn main:app --host 0.0.0.0 --reload
-    ```
-    這將啟動開發伺服器，並在程式碼變更時自動重新載入。
+在專案根目錄下執行以下命令：
 
-2.  **訪問應用程式:**
-    打開您的網頁瀏覽器，訪問 `http://localhost:8000`。
+```powershell
+uvicorn main:app --reload
+```
 
-### 注意事項
+或者，如果您在 Windows 環境下，可以直接執行 `run.bat` 腳本：
 
-*   首次運行時，`stashup.db` 檔案將會自動生成。
-*   如果資料庫模型有變更，您可能需要手動刪除 `stashup.db` 檔案，讓應用程式重新創建資料庫結構。
-*   `SECRET_KEY` 在 `main.py` 中目前是硬編碼的，在生產環境中應從環境變數中載入以提高安全性。
+```powershell
+.\run.bat
+```
+
+應用程式將在 `http://127.0.0.1:8000` 上運行。
+
+### 4. 訪問應用程式
+
+在瀏覽器中打開 `http://127.0.0.1:8000` 即可訪問前端介面。
+
+### 5. 資料庫初始化
+
+應用程式首次啟動時，會自動創建 `stashup.db` SQLite 資料庫並填充預設類別。
