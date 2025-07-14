@@ -160,3 +160,28 @@ export const createCategory = (data) => request('/api/categories', {
  * @returns {Promise<Object>} - 刪除成功的響應。
  */
 export const deleteCategory = (type, name) => request(`/api/categories/${type}/${name}`, { method: 'DELETE' });
+
+/**
+ * @function deleteUserAccount
+ * @description 刪除使用者帳號及所有相關資料。
+ * @returns {Promise<Object>} - 刪除成功的響應。
+ */
+export const deleteUserAccount = () => request('/auth/delete-account', { method: 'DELETE' });
+
+/**
+ * @function exportUserData
+ * @description 匯出使用者所有資料（交易紀錄和自訂分類）。
+ * @returns {Promise<Object>} - 包含使用者資料的物件。
+ */
+export const exportUserData = () => request('/auth/export-data');
+
+/**
+ * @function importUserData
+ * @description 匯入使用者資料（交易紀錄和自訂分類）。
+ * @param {Object} data - 要匯入的使用者資料。
+ * @returns {Promise<Object>} - 匯入結果的響應。
+ */
+export const importUserData = (data) => request('/auth/import-data', {
+    method: 'POST',
+    body: JSON.stringify(data)
+});

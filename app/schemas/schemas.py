@@ -94,3 +94,19 @@ class TokenData(BaseModel):
     Schema for JWT token data.
     """
     username: Optional[str] = None
+
+# Export/Import Schemas
+class UserDataExport(BaseModel):
+    """
+    Schema for exporting user data including transactions and categories.
+    """
+    username: str
+    transactions: List[TransactionModel]
+    custom_categories: List[CategoryModel]
+
+class UserDataImport(BaseModel):
+    """
+    Schema for importing user data.
+    """
+    transactions: List[TransactionCreate]
+    custom_categories: List[CategoryCreate]

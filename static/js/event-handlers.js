@@ -289,6 +289,93 @@ export const setupEventListeners = (getAppState, refreshData, updateAppState) =>
     DOM.loginRegisterBtn.addEventListener('click', () => {
         authModal.show();
     });
+
+    // --- User Management Events ---
+    const deleteAccountModal = new bootstrap.Modal(document.getElementById('delete-account-modal'));
+    const importDataModal = new bootstrap.Modal(document.getElementById('import-data-modal'));
+
+    document.getElementById('delete-account-btn').addEventListener('click', () => {
+        document.getElementById('confirm-username').value = '';
+        document.getElementById('confirm-delete-btn').disabled = true;
+        deleteAccountModal.show();
+    });
+
+    document.getElementById('confirm-username').addEventListener('input', (e) => {
+        const username = e.target.value.trim();
+        const currentUsername = getAppState().currentUsername;
+        document.getElementById('confirm-delete-btn').disabled = username !== currentUsername;
+    });
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+        if (confirm('這是最後確認！刪除後將無法復原！')) {
+            try {
+                await API.deleteUserAccount();
+                alert('您的帳號已成功刪除');
+                deleteAccountModal.hide();
+                API.clearAuthToken();
+                updateAppState({ authToken: null, currentUsername: null, allTransactions: [], categories: { expense: [], income: [] } });
+                UI.renderAuthUI(null);
+                UI.renderInitialMessageForLoggedOut();
+            } catch (error) {
+                console.error('Failed to delete account:', error);
+                alert('刪除帳號失敗：' + error.message);
+            }
+        }
+    });
+
+    document.getElementById('export-data-btn').addEventListener('click', async () => {
+        try {
+            const userData = await API.exportUserData();
+            const dataStr = JSON.stringify(userData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `stashup-data-${getAppState().currentUsername}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            alert('資料匯出成功！');
+        } catch (error) {
+            console.error('Failed to export data:', error);
+            alert('匯出資料失敗：' + error.message);
+        }
+    });
+
+    document.getElementById('import-data-btn').addEventListener('click', () => {
+        document.getElementById('import-file').value = '';
+        document.getElementById('confirm-import-btn').disabled = true;
+        importDataModal.show();
+    });
+
+    document.getElementById('import-file').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        document.getElementById('confirm-import-btn').disabled = !file || !file.name.endsWith('.json');
+    });
+
+    document.getElementById('confirm-import-btn').addEventListener('click', async () => {
+        const file = document.getElementById('import-file').files[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            // 驗證資料格式
+            if (!data.transactions || !data.custom_categories) {
+                throw new Error('無效的資料格式');
+            }
+
+            const result = await API.importUserData(data);
+            alert(`資料匯入成功！\n匯入交易：${result.imported_transactions} 筆\n匯入分類：${result.imported_categories} 個`);
+            importDataModal.hide();
+            await refreshData();
+        } catch (error) {
+            console.error('Failed to import data:', error);
+            alert('匯入資料失敗：' + error.message);
+        }
+    });
 };
 
 /**
