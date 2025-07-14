@@ -64,7 +64,7 @@ export const request = async (url, options = {}) => {
  * @param {string} password - 密碼。
  * @returns {Promise<Object>} - 註冊成功的響應。
  */
-export const register = (username, password) => request('/register', {
+export const register = (username, password) => request('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ username, password })
 });
