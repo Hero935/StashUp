@@ -99,22 +99,22 @@ export const setupEventListeners = (getAppState, refreshData, updateAppState) =>
     DOM.filterKeywordEl.addEventListener('input', refreshData);
 
     DOM.toggleChartBtn.addEventListener('click', () => {
-        UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '顯示分析', '隱藏分析', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
+        UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '圖表', '圖表', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
         // 當顯示分析時，隱藏帳號管理
         if (DOM.chartDisplaySection.style.display === 'block') {
             if (DOM.userManagementSection.style.display === 'block') { // 只有當帳號管理是顯示狀態時才隱藏
-                UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號管理', '隱藏帳號管理', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
+                UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號', '帳號', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
             }
             UI.updateChart(getFilteredTransactions(getAppState().allTransactions, DOM.filterPeriodEl.value, DOM.filterCategoryEl.value, DOM.filterKeywordEl.value, DOM.startDateEl.value, DOM.endDateEl.value));
         }
     });
 
     DOM.toggleUserManagementBtn.addEventListener('click', () => {
-        UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號管理', '隱藏帳號管理', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
+        UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號', '帳號', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
         // 當顯示帳號管理時，隱藏分析
         if (DOM.userManagementSection.style.display === 'block') {
             if (DOM.chartDisplaySection.style.display === 'block') { // 只有當圖表是顯示狀態時才隱藏
-                UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '顯示分析', '隱藏分析', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
+                UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '圖表', '圖表', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
             }
         }
     });

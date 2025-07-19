@@ -178,8 +178,8 @@ export const renderAuthUI = (currentUsername) => {
         if (DOM.chartDisplaySection) DOM.chartDisplaySection.style.display = 'none';
         if (DOM.userManagementSection) DOM.userManagementSection.style.display = 'none';
         // 重置按鈕文字
-        if (DOM.toggleChartBtn) DOM.toggleChartBtn.innerHTML = '<i class="bi bi-pie-chart"></i> 顯示分析';
-        if (DOM.toggleUserManagementBtn) DOM.toggleUserManagementBtn.innerHTML = '<i class="bi bi-person-gear"></i> 帳號管理';
+        if (DOM.toggleChartBtn) DOM.toggleChartBtn.innerHTML = '<i class="bi bi-pie-chart"></i> 圖表';
+        if (DOM.toggleUserManagementBtn) DOM.toggleUserManagementBtn.innerHTML = '<i class="bi bi-person-gear"></i> 帳號';
     } else {
         DOM.usernameDisplay.textContent = '';
         DOM.loginRegisterBtn.style.display = 'block';
