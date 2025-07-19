@@ -99,13 +99,23 @@ export const setupEventListeners = (getAppState, refreshData, updateAppState) =>
     DOM.filterKeywordEl.addEventListener('input', refreshData);
 
     DOM.toggleChartBtn.addEventListener('click', () => {
-        if (DOM.chartContainer.style.display === 'none') {
-            DOM.chartContainer.style.display = 'block';
+        UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '顯示分析', '隱藏分析', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
+        // 當顯示分析時，隱藏帳號管理
+        if (DOM.chartDisplaySection.style.display === 'block') {
+            if (DOM.userManagementSection.style.display === 'block') { // 只有當帳號管理是顯示狀態時才隱藏
+                UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號管理', '隱藏帳號管理', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
+            }
             UI.updateChart(getFilteredTransactions(getAppState().allTransactions, DOM.filterPeriodEl.value, DOM.filterCategoryEl.value, DOM.filterKeywordEl.value, DOM.startDateEl.value, DOM.endDateEl.value));
-            DOM.toggleChartBtn.innerHTML = '<i class="bi bi-eye-slash"></i> 隱藏分析';
-        } else {
-            DOM.chartContainer.style.display = 'none';
-            DOM.toggleChartBtn.innerHTML = '<i class="bi bi-pie-chart"></i> 顯示分析';
+        }
+    });
+
+    DOM.toggleUserManagementBtn.addEventListener('click', () => {
+        UI.toggleSection(DOM.userManagementSection, DOM.toggleUserManagementBtn, '帳號管理', '隱藏帳號管理', '<i class="bi bi-person-gear"></i>', '<i class="bi bi-eye-slash"></i>');
+        // 當顯示帳號管理時，隱藏分析
+        if (DOM.userManagementSection.style.display === 'block') {
+            if (DOM.chartDisplaySection.style.display === 'block') { // 只有當圖表是顯示狀態時才隱藏
+                UI.toggleSection(DOM.chartDisplaySection, DOM.toggleChartBtn, '顯示分析', '隱藏分析', '<i class="bi bi-pie-chart"></i>', '<i class="bi bi-eye-slash"></i>');
+            }
         }
     });
 
@@ -411,18 +421,22 @@ export const getFilteredTransactions = (allTransactions, period, category, keywo
                 periodMatch = transactionDate.toDateString() === now.toDateString();
                 break;
             case 'this-week':
-                const firstDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // 假設週日為一週的第一天
-                const lastDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+                const tempNowWeek = new Date(now); // 複製 now
+                const firstDayOfWeek = new Date(tempNowWeek.setDate(tempNowWeek.getDate() - tempNowWeek.getDay())); // 假設週日為一週的第一天
+                const lastDayOfWeek = new Date(tempNowWeek.setDate(tempNowWeek.getDate() - tempNowWeek.getDay() + 6));
                 periodMatch = transactionDate >= firstDayOfWeek && transactionDate <= lastDayOfWeek;
                 break;
             case 'this-month':
-                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                const tempNowMonth = new Date(now); // 複製 now
+                const firstDayOfMonth = new Date(tempNowMonth.getFullYear(), tempNowMonth.getMonth(), 1);
+                const lastDayOfMonth = new Date(tempNowMonth.getFullYear(), tempNowMonth.getMonth() + 1, 0);
                 periodMatch = transactionDate >= firstDayOfMonth && transactionDate <= lastDayOfMonth;
                 break;
             case 'this-year':
-                const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
-                periodMatch = transactionDate >= firstDayOfYear && transactionDate <= now;
+                const tempNowYear = new Date(now); // 複製 now
+                const firstDayOfYear = new Date(tempNowYear.getFullYear(), 0, 1);
+                const lastDayOfYear = new Date(tempNowYear.getFullYear(), 11, 31); // 今年最後一天
+                periodMatch = transactionDate >= firstDayOfYear && transactionDate <= lastDayOfYear;
                 break;
             case 'custom':
                 const startDate = startDateStr ? new Date(startDateStr + 'T00:00:00') : null;

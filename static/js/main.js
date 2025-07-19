@@ -58,7 +58,8 @@ const refreshData = async () => {
         UI.renderCategories(appState.categories);
         UI.updateDashboard(filteredTransactions);
         UI.renderTransactions(filteredTransactions);
-        if (DOM.chartContainer.style.display !== 'none') {
+        // 只有當 chartDisplaySection 存在且顯示時才更新圖表
+        if (DOM.chartDisplaySection && DOM.chartDisplaySection.style.display !== 'none') {
             UI.updateChart(filteredTransactions);
         }
     } catch (error) {
@@ -90,6 +91,9 @@ const init = async () => {
             updateAppState({ authToken: null, currentUsername: null }); // 明確設置為 null
         }
     }
+ 
+    // 初始化 DOM 元素
+    DOM.initDOMElements();
 
     // 初始化 Bootstrap Modal 實例
     const transactionModal = new bootstrap.Modal(DOM.transactionModalEl);

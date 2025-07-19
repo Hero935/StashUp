@@ -93,15 +93,16 @@
 
         <!-- Action Buttons -->
         <section id="action-buttons" class="mb-4">
-            <div class="d-flex flex-wrap justify-content-around gap-2">
+            <div class="d-flex justify-content-around gap-2">
                 <button class="btn btn-primary btn-lg flex-grow-1" data-bs-toggle="modal" data-bs-target="#transaction-modal"><i class="bi bi-plus-circle"></i> 新增交易</button>
                 <button class="btn btn-outline-secondary btn-lg flex-grow-1" data-bs-toggle="modal" data-bs-target="#category-modal"><i class="bi bi-tags"></i> 管理分類</button>
                 <button class="btn btn-info btn-lg flex-grow-1" id="toggle-chart-btn"><i class="bi bi-pie-chart"></i> 顯示分析</button>
+                <button class="btn btn-warning btn-lg flex-grow-1" id="toggle-user-management-btn"><i class="bi bi-person-gear"></i> 帳號管理</button>
             </div>
         </section>
 
         <!-- User Management -->
-        <section id="user-management" class="mb-4">
+        <section id="user-management" class="mb-4" style="display: none;">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-person-gear"></i> 帳號管理</h5>
@@ -117,13 +118,13 @@
         </section>
 
         <!-- Chart Display -->
-        <section id="chart-display" class="mb-4">
+        <section id="chart-display" class="mb-4" style="display: none;">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-graph-up"></i> 財務圖表</h5>
                 </div>
                 <div class="card-body">
-                    <div id="chart-container" style="display: none;">
+                    <div id="chart-container">
                         <canvas id="expense-chart"></canvas>
                     </div>
                 </div>

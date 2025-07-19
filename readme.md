@@ -17,7 +17,7 @@ StashUp 是一個簡單易用的日常記帳應用程式，旨在幫助使用者
 │   ├── models/             # 後端資料庫模型
 │   └── schemas/            # 後端 Pydantic 模型
 ├── static/
-│   ├── css/                # 前端樣式表
+│   ├── style.css           # 前端樣式表
 │   ├── js/                 # 前端 JavaScript 模組
 │   │   ├── api-service.js      # API 服務呼叫
 │   │   ├── dom-elements.js     # DOM 元素選取
@@ -35,7 +35,6 @@ StashUp 是一個簡單易用的日常記帳應用程式，旨在幫助使用者
 ├── report.md               # 任務報告
 ├── spec.md                 # 規格文件
 └── todolist.md             # 任務清單
-└── wrangler.toml           # Cloudflare Workers 配置 (如果使用)
 ```
 
 ## 使用技術
@@ -43,7 +42,7 @@ StashUp 是一個簡單易用的日常記帳應用程式，旨在幫助使用者
 *   **後端**: Python 3.9+, FastAPI, SQLAlchemy, SQLite (或 PostgreSQL)
 *   **前端**: HTML5, CSS3 (Bootstrap 5), JavaScript (ES6 Modules), Chart.js
 *   **資料庫**: SQLite (預設，可配置為 PostgreSQL)
-*   **部署**: (可選) Cloudflare Workers (透過 `wrangler.toml` 配置)
+*   **部署**: (可選) 靜態檔案伺服器
 
 ## 檔案清單與簡短說明
 
@@ -68,7 +67,6 @@ StashUp 是一個簡單易用的日常記帳應用程式，旨在幫助使用者
 *   **`todolist.md`**: 專案開發過程中的任務清單和進度追蹤。
 *   **`report.md`**: 專案完成後的任務報告。
 *   **`spec.md`**: 專案的規格文件，包含設計細節和 UML 圖。
-*   **`wrangler.toml`**: Cloudflare Workers 的配置檔案，用於部署前端和後端到 Cloudflare。
 
 ## 安裝及執行方式
 

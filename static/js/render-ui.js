@@ -3,24 +3,28 @@
  * @description 負責所有使用者介面 (UI) 的渲染邏輯。
  */
 
-import {
-    expenseCategoryListEl,
-    incomeCategoryListEl,
-    filterCategoryEl,
-    transactionTypeEl,
-    transactionCategoryEl,
-    transactionsListEl,
-    totalIncomeEl,
-    totalExpenseEl,
-    balanceEl,
-    expenseChartCanvas,
-    chartContainer,
-    usernameDisplay,
-    mainContent,
-    loginRegisterBtn,
-    logoutBtn
-} from './dom-elements.js';
+import * as DOM from './dom-elements.js'; // 導入整個 DOM 模組
 import { formatCurrency, formatDate } from './utils.js';
+
+/**
+ * @function toggleSection
+ * @description 切換指定區塊的顯示狀態，並更新按鈕文字和圖示。
+ * @param {HTMLElement} sectionEl - 要切換顯示狀態的區塊元素。
+ * @param {HTMLElement} buttonEl - 觸發切換的按鈕元素。
+ * @param {string} showText - 顯示區塊時按鈕的文字。
+ * @param {string} hideText - 隱藏區塊時按鈕的文字。
+ * @param {string} showIcon - 顯示區塊時按鈕的圖示 HTML。
+ * @param {string} hideIcon - 隱藏區塊時按鈕的圖示 HTML。
+ */
+export const toggleSection = (sectionEl, buttonEl, showText, hideText, showIcon, hideIcon) => {
+    if (sectionEl.style.display === 'none') {
+        sectionEl.style.display = 'block';
+        buttonEl.innerHTML = `${hideIcon} ${hideText}`;
+    } else {
+        sectionEl.style.display = 'none';
+        buttonEl.innerHTML = `${showIcon} ${showText}`;
+    }
+};
 
 let expenseChartInstance; // Chart.js 實例
 
@@ -32,16 +36,16 @@ let expenseChartInstance; // Chart.js 實例
  * @param {Function} updateTransactionCategoryDropdown - 更新交易分類下拉選單的回調函式。
  */
 export const renderCategories = (categories) => {
-    expenseCategoryListEl.innerHTML = categories.expense.map(cat => `
+    DOM.expenseCategoryListEl.innerHTML = categories.expense.map(cat => `
         <li class="list-group-item">${cat} <button class="btn-icon float-end" data-category-type="expense" data-category-name="${cat}"><i class="bi bi-trash"></i></button></li>
     `).join('');
-    incomeCategoryListEl.innerHTML = categories.income.map(cat => `
+    DOM.incomeCategoryListEl.innerHTML = categories.income.map(cat => `
         <li class="list-group-item">${cat} <button class="btn-icon float-end" data-category-type="income" data-category-name="${cat}"><i class="bi bi-trash"></i></button></li>
     `).join('');
 
     const allCats = [...categories.expense, ...categories.income];
     const uniqueCats = [...new Set(allCats)];
-    filterCategoryEl.innerHTML = '<option value="all">全部分類</option>' + uniqueCats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    DOM.filterCategoryEl.innerHTML = '<option value="all">全部分類</option>' + uniqueCats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
     
     updateTransactionCategoryDropdown(categories); // 傳入 categories
 };
@@ -52,9 +56,9 @@ export const renderCategories = (categories) => {
  * @param {Object} categories - 包含收入和支出分類的物件。
  */
 export const updateTransactionCategoryDropdown = (categories) => {
-    const type = transactionTypeEl.value;
+    const type = DOM.transactionTypeEl.value;
     const cats = categories[type] || [];
-    transactionCategoryEl.innerHTML = cats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    DOM.transactionCategoryEl.innerHTML = cats.map(cat => `<option value="${cat}">${cat}</option>`).join('');
 };
 
 /**
@@ -66,9 +70,9 @@ export const updateTransactionCategoryDropdown = (categories) => {
  * @param {Function} handleDeleteTransaction - 刪除交易的回調函式。
  */
 export const renderTransactions = (filteredTransactions) => {
-    transactionsListEl.innerHTML = '';
+    DOM.transactionsListEl.innerHTML = '';
     if (filteredTransactions.length === 0) {
-        transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">尚無符合條件的交易紀錄</li>';
+        DOM.transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">尚無符合條件的交易紀錄</li>';
         return;
     }
 
@@ -93,7 +97,7 @@ export const renderTransactions = (filteredTransactions) => {
                 </div>
             </div>
         `;
-        transactionsListEl.appendChild(li);
+        DOM.transactionsListEl.appendChild(li);
     });
 };
 
@@ -107,9 +111,9 @@ export const updateDashboard = (filteredTransactions) => {
     const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
     const balance = income - expense;
 
-    totalIncomeEl.textContent = formatCurrency(income);
-    totalExpenseEl.textContent = formatCurrency(expense);
-    balanceEl.textContent = formatCurrency(balance);
+    DOM.totalIncomeEl.textContent = formatCurrency(income);
+    DOM.totalExpenseEl.textContent = formatCurrency(expense);
+    DOM.balanceEl.textContent = formatCurrency(balance);
 };
 
 /**
@@ -133,9 +137,11 @@ export const updateChart = (filteredTransactions) => {
     }
     
     if (labels.length > 0) {
-        const expenseChartCanvas = document.getElementById('expense-chart');
-        if (expenseChartCanvas) {
-            expenseChartInstance = new Chart(expenseChartCanvas.getContext('2d'), {
+        if (DOM.expenseChartCanvas) {
+            // 清除 canvas 的 style 屬性，讓 CSS 規則生效
+            DOM.expenseChartCanvas.style.cssText = '';
+            // 移除日誌
+            expenseChartInstance = new Chart(DOM.expenseChartCanvas.getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -147,9 +153,12 @@ export const updateChart = (filteredTransactions) => {
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
             });
+            console.log('Chart instance created.');
         } else {
             console.error('Canvas element with ID "expense-chart" not found.');
         }
+    } else {
+        console.log('No expense data to render chart.');
     }
 };
 
@@ -160,15 +169,22 @@ export const updateChart = (filteredTransactions) => {
  */
 export const renderAuthUI = (currentUsername) => {
     if (currentUsername) {
-        usernameDisplay.textContent = `歡迎, ${currentUsername}`;
-        loginRegisterBtn.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        mainContent.style.display = 'block'; // 顯示主要內容
+        DOM.usernameDisplay.textContent = `歡迎, ${currentUsername}`;
+        DOM.loginRegisterBtn.style.display = 'none';
+        DOM.logoutBtn.style.display = 'block';
+        DOM.mainContent.style.display = 'block'; // 顯示主要內容
+        // 登入後預設顯示交易列表，隱藏圖表和帳號管理
+        // 確保 DOM 元素已初始化
+        if (DOM.chartDisplaySection) DOM.chartDisplaySection.style.display = 'none';
+        if (DOM.userManagementSection) DOM.userManagementSection.style.display = 'none';
+        // 重置按鈕文字
+        if (DOM.toggleChartBtn) DOM.toggleChartBtn.innerHTML = '<i class="bi bi-pie-chart"></i> 顯示分析';
+        if (DOM.toggleUserManagementBtn) DOM.toggleUserManagementBtn.innerHTML = '<i class="bi bi-person-gear"></i> 帳號管理';
     } else {
-        usernameDisplay.textContent = '';
-        loginRegisterBtn.style.display = 'block';
-        logoutBtn.style.display = 'none';
-        mainContent.style.display = 'none'; // 隱藏主要內容
+        DOM.usernameDisplay.textContent = '';
+        DOM.loginRegisterBtn.style.display = 'block';
+        DOM.logoutBtn.style.display = 'none';
+        DOM.mainContent.style.display = 'none'; // 隱藏主要內容
     }
 };
 
@@ -177,5 +193,5 @@ export const renderAuthUI = (currentUsername) => {
  * @description 當使用者未登入時，顯示提示訊息。
  */
 export const renderInitialMessageForLoggedOut = () => {
-    transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">請登入以查看交易紀錄。</li>';
+    DOM.transactionsListEl.innerHTML = '<li class="list-group-item text-center p-3">請登入以查看交易紀錄。</li>';
 };
